@@ -536,6 +536,7 @@ void AsyncWebSocketClient::_runQueue(){
   while(!_messageQueue.isEmpty() && _messageQueue.front()->finished()){
     _messageQueue.remove(_messageQueue.front());
   }
+  //Serial.printf("> _runQueue() size:%u heap:%u\n", _messageQueue.length(), ESP.getFreeHeap());
 
   if(!_controlQueue.isEmpty() && (_messageQueue.isEmpty() || _messageQueue.front()->betweenFrames()) && webSocketSendFrameWindow(_client) > (size_t)(_controlQueue.front()->len() - 1)){
     _controlQueue.front()->send(_client);
@@ -602,6 +603,12 @@ void AsyncWebSocketClient::ping(uint8_t *data, size_t len){
 void AsyncWebSocketClient::_onError(int8_t){}
 
 void AsyncWebSocketClient::_onTimeout(uint32_t time){
+  while (!_messageQueue.isEmpty()) {
+    _messageQueue.remove(_messageQueue.front());
+  }
+  while (!_controlQueue.isEmpty()) {
+    _controlQueue.remove(_controlQueue.front());
+  }
   _client->close(true);
 }
 
